@@ -49,7 +49,7 @@
     <div id="loading-spinner" class="fixed inset-0 flex items-center justify-center loading-overlay transition-opacity duration-500">
         <div class="text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p class="mt-4 text-slate-600 font-medium">Checking the schedule...</p>
+            <p class="mt-4 text-slate-600 font-medium">Loading your board...</p>
         </div>
     </div>
 
@@ -63,10 +63,9 @@
             </div>
             <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Book Club Bingo</h1>
             
-            <div class="mt-2 flex flex-col items-center justify-center gap-1">
-                <span id="current-theme" class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">Theme Loading...</span>
-                <h2 id="book-title" class="text-xl font-bold text-slate-700 mt-1 italic">Book Loading...</h2>
-                <p id="month-label" class="text-xs text-slate-400 font-medium"></p>
+            <div class="mt-3 flex flex-col items-center justify-center gap-1">
+                <span id="current-theme" contenteditable="true" class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full border border-transparent hover:border-indigo-200 focus:outline-none focus:bg-white">Set Theme...</span>
+                <h2 id="book-title" contenteditable="true" class="text-xl font-bold text-slate-700 mt-1 italic border-b border-transparent hover:border-slate-300 focus:outline-none focus:border-indigo-500">Tap to set book title...</h2>
             </div>
         </div>
 
@@ -84,13 +83,13 @@
             </div>
             <div class="flex-1">
                 <p class="font-bold text-emerald-800 leading-none text-lg">BINGO!</p>
-                <p class="text-sm text-emerald-600 mt-1">Screenshot your board and share your code!</p>
+                <p class="text-sm text-emerald-600 mt-1">Screenshot this and send it to the group!</p>
             </div>
         </div>
 
         <!-- Verification Section -->
         <div class="mb-6 bg-slate-100 p-3 rounded-2xl border border-slate-200 text-center">
-            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Board Hash (Verification)</p>
+            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Board Verification Hash</p>
             <code id="verify-code" class="text-sm font-mono text-slate-600 tracking-tighter">---- ---- ----</code>
         </div>
 
@@ -111,43 +110,25 @@
         </div>
 
         <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
-            <h3 class="font-bold text-indigo-900 mb-2 text-lg">Club Dashboard</h3>
-            <p class="text-xs text-indigo-800 mb-3 opacity-70">The board shuffles automatically every month based on our schedule.</p>
+            <h3 class="font-bold text-indigo-900 mb-2 text-lg">Admin Guide</h3>
             <ul class="text-sm text-indigo-800 space-y-2 opacity-90">
-                <li class="flex gap-2"><span>•</span> <span>Progress saves to your device.</span></li>
-                <li class="flex gap-2"><span>•</span> <span>First to 5 in a row wins the pick!</span></li>
+                <li class="flex gap-2"><span>•</span> <span>Tap the book title or theme label above to edit it.</span></li>
+                <li class="flex gap-2"><span>•</span> <span>Hit "Shuffle" when a new month starts to get a fresh board.</span></li>
+                <li class="flex gap-2"><span>•</span> <span>Progress is saved automatically on your phone/computer.</span></li>
             </ul>
         </div>
     </div>
 
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-medium shadow-2xl opacity-0 transition-opacity pointer-events-none duration-300">
-        Copied to clipboard!
+        Link copied!
     </div>
 
     <script>
         (function() {
-            /** * EDIT YOUR SCHEDULE HERE ONCE
-             * The app will automatically switch based on the current date.
+            /**
+             * UPDATE YOUR BINGO CHALLENGES HERE
+             * Simply edit the text in these quotes. Keep exactly 24 items in the list.
              */
-            const BOOK_SCHEDULE = {
-                0: { title: "The Seven Husbands of Evelyn Hugo", theme: "Historical Fiction" }, // Jan
-                1: { title: "Project Hail Mary", theme: "Science Fiction" },                 // Feb
-                2: { title: "Crying in H Mart", theme: "Memoir" },                          // Mar
-                3: { title: "The Silent Patient", theme: "Psychological Thriller" },        // Apr
-                4: { title: "Tomorrow, and Tomorrow, and Tomorrow", theme: "Contemporary" }, // May
-                5: { title: "Demon Copperhead", theme: "Modern Classic" },                 // Jun
-                6: { title: "The Night Circus", theme: "Fantasy" },                        // Jul
-                7: { title: "Yellowface", theme: "Satire" },                                // Aug
-                8: { title: "Lessons in Chemistry", theme: "Historical Drama" },           // Sep
-                9: { title: "Fourth Wing", theme: "Romantasy" },                            // Oct
-                10: { title: "The Bee Sting", theme: "Literary Fiction" },                 // Nov
-                11: { title: "The Dutch House", theme: "Family Saga" }                     // Dec
-            };
-
-            const STORAGE_KEY_BOARD = 'book_club_bingo_board_v4';
-            const STORAGE_KEY_MARKED = 'book_club_bingo_marked_v4';
-            const STORAGE_KEY_MONTH = 'book_club_bingo_active_month_v4';
-            
             const masterChallenges = [
                 "Read a chapter outdoors", "Character makes a choice you hate", "Try a new coffee roast", "Finish a book early", "Export a highlight/note",
                 "Prediction came true", "Plot twist you didn't see", "Read 50 pages in one sitting", "Mention a vegan snack", "Look up a word you didn't know",
@@ -155,6 +136,11 @@
                 "Character has a pet", "Bookmark is not a bookmark", "Author's debut novel", "Read a new genre", "Book has a map",
                 "Emotional ending", "Favorite quote shared", "Listen to an audiobook", "Book with a blue cover", "Theme-related snack"
             ];
+
+            const STORAGE_KEY_BOARD = 'book_club_bingo_board_v5';
+            const STORAGE_KEY_MARKED = 'book_club_bingo_marked_v5';
+            const STORAGE_KEY_TITLE = 'book_club_bingo_title_v5';
+            const STORAGE_KEY_THEME = 'book_club_bingo_theme_v5';
 
             let activeBoard = [];
             let marked = new Array(25).fill(false);
@@ -165,7 +151,6 @@
             const loader = document.getElementById('loading-spinner');
             const titleElement = document.getElementById('book-title');
             const themeElement = document.getElementById('current-theme');
-            const monthLabel = document.getElementById('month-label');
             const verifyCodeElement = document.getElementById('verify-code');
 
             function shuffle(array) {
@@ -247,19 +232,15 @@
             }
 
             window.confirmReset = () => {
-                if (confirm("Reset and shuffle your board for the current book? All current progress will be lost.")) {
+                if (confirm("This will clear your current checks and give you a new random board. Continue?")) {
                     activeBoard = generateNewBoard();
                     marked = new Array(25).fill(false);
                     marked[12] = true;
-                    saveState();
+                    localStorage.setItem(STORAGE_KEY_BOARD, JSON.stringify(activeBoard));
+                    localStorage.setItem(STORAGE_KEY_MARKED, JSON.stringify(marked));
                     renderBoard();
                 }
             };
-
-            function saveState() {
-                localStorage.setItem(STORAGE_KEY_BOARD, JSON.stringify(activeBoard));
-                localStorage.setItem(STORAGE_KEY_MARKED, JSON.stringify(marked));
-            }
 
             window.copyLink = () => {
                 const url = window.location.href;
@@ -274,41 +255,26 @@
                 setTimeout(() => toast.style.opacity = '0', 2000);
             };
 
-            // Main Logic
-            const now = new Date();
-            const currentMonth = now.getMonth(); // 0-11
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
-            // Set Header UI
-            const currentSchedule = BOOK_SCHEDULE[currentMonth] || { title: "Reading Break", theme: "Miscellaneous" };
-            titleElement.innerText = currentSchedule.title;
-            themeElement.innerText = currentSchedule.theme;
-            monthLabel.innerText = `${monthNames[currentMonth]} ${now.getFullYear()}`;
+            // Save title/theme on change
+            titleElement.addEventListener('blur', () => localStorage.setItem(STORAGE_KEY_TITLE, titleElement.innerText));
+            themeElement.addEventListener('blur', () => localStorage.setItem(STORAGE_KEY_THEME, themeElement.innerText));
 
-            // Automatic Month Reset Logic
-            const savedMonth = localStorage.getItem(STORAGE_KEY_MONTH);
+            // Load Data
             const savedBoard = localStorage.getItem(STORAGE_KEY_BOARD);
             const savedMarked = localStorage.getItem(STORAGE_KEY_MARKED);
+            const savedTitle = localStorage.getItem(STORAGE_KEY_TITLE);
+            const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
 
-            // If the month has changed since last visit, force a reset
-            if (savedMonth === null || parseInt(savedMonth) !== currentMonth) {
-                activeBoard = generateNewBoard();
-                marked = new Array(25).fill(false);
-                marked[12] = true;
-                localStorage.setItem(STORAGE_KEY_MONTH, currentMonth);
-                saveState();
+            if (savedBoard) {
+                activeBoard = JSON.parse(savedBoard);
             } else {
-                // Otherwise load the existing board
-                if (savedBoard) {
-                    activeBoard = JSON.parse(savedBoard);
-                } else {
-                    activeBoard = generateNewBoard();
-                    saveState();
-                }
-                if (savedMarked) {
-                    marked = JSON.parse(savedMarked);
-                }
+                activeBoard = generateNewBoard();
+                localStorage.setItem(STORAGE_KEY_BOARD, JSON.stringify(activeBoard));
             }
+
+            if (savedMarked) marked = JSON.parse(savedMarked);
+            if (savedTitle) titleElement.innerText = savedTitle;
+            if (savedTheme) themeElement.innerText = savedTheme;
 
             renderBoard();
             setTimeout(() => {
