@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Club Bingo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tile-active {
+            background-color: #4f46e5 !important;
+            color: white !important;
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+        .free-space {
+            background-color: #fef3c7 !important;
+            color: #92400e !important;
+            font-weight: 800;
+        }
+        .tile-active.free-space {
+            background-color: #f59e0b !important;
+            color: white !important;
+        }
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen py-8 px-4">
+
+    <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center loading-overlay transition-opacity duration-300">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+
+    <div class="max-w-md mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center p-3 bg-indigo-600 rounded-2xl shadow-lg mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Book Club Bingo</h1>
+            <p class="text-slate-500 mt-1">Progress is automatically saved</p>
+        </div>
+
+        <!-- Bingo Grid -->
+        <div id="bingo-grid" class="grid grid-cols-5 gap-2 bg-white p-3 rounded-3xl shadow-xl border border-slate-100 mb-8">
+            <!-- Tiles will be injected here by JS -->
+        </div>
+
+        <!-- Bingo Alert -->
+        <div id="bingo-alert" class="hidden bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-4 animate-bounce mb-6">
+            <div class="bg-emerald-500 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            </div>
+            <div>
+                <p class="font-bold text-emerald-800 leading-none">BINGO!</p>
+                <p class="text-sm text-emerald-600 mt-1">You've cleared a line! Share with the group.</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <button onclick="copyLink()" class="flex items-center justify-center gap-2 bg-white border border-slate-200 p-4 rounded-2xl font-semibold text-slate-700 active:bg-slate-50 transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6a3 3 0 100-2.684m0 2.684l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share
+            </button>
+            <button onclick="confirmReset()" class="flex items-center justify-center gap-2 bg-white border border-slate-200 p-4 rounded-2xl font-semibold text-slate-700 active:bg-slate-50 transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset
+            </button>
+        </div>
+
+        <!-- Rules Box -->
+        <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+            <h3 class="font-bold text-indigo-900 mb-3 text-lg flex items-center gap-2">
+                Rules of Engagement
+            </h3>
+            <ul class="text-sm text-indigo-800 space-y-3 opacity-90">
+                <li class="flex gap-2"><span>•</span> <span>Complete any 5 squares in a row, column, or diagonal.</span></li>
+                <li class="flex gap-2"><span>•</span> <span>Progress is saved to the cloud automatically.</span></li>
+                <li class="flex gap-2"><span>•</span> <span>Winner picks the theme for the next session!</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-medium shadow-2xl opacity-0 transition-opacity pointer-events-none">
+        Link copied!
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        const challenges = [
+            "Read a chapter outdoors", "Character makes a choice you hate", "Try a new coffee roast", "Finish a book early", "Export a highlight/note",
+            "Prediction came true", "Plot twist you didn't see", "Read 50 pages in one sitting", "Mention a vegan snack", "Look up a word you didn't know",
+            "Share a 'casting' idea", "Finish the book!", "FREE SPACE", "Recommend a book", "Read in an NWA park",
+            "Character has a pet", "Bookmark is not a bookmark", "Author's debut novel", "Read a new genre", "Book has a map",
+            "Emotional ending", "Favorite quote shared", "Listen to an audiobook", "Book with a blue cover", "Theme-related snack"
+        ];
+
+        let marked = new Array(25).fill(false);
+        marked[12] = true;
+        let currentUser = null;
+
+        const gridElement = document.getElementById('bingo-grid');
+        const alertElement = document.getElementById('bingo-alert');
+        const loader = document.getElementById('loading-spinner');
+
+        // Initialize UI
+        function renderBoard() {
+            gridElement.innerHTML = '';
+            challenges.forEach((text, i) => {
+                const btn = document.createElement('button');
+                btn.className = `aspect-square p-1 sm:p-2 rounded-xl text-[10px] sm:text-xs font-medium transition-all duration-200 flex items-center justify-center text-center leading-tight bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 relative`;
+                
+                if (marked[i]) btn.classList.add('tile-active');
+                
+                if (i === 12) {
+                    btn.classList.add('free-space');
+                    btn.innerText = "FREE SPACE";
+                } else {
+                    btn.innerText = text;
+                }
+                
+                btn.onclick = () => toggleTile(i);
+                gridElement.appendChild(btn);
+            });
+            checkBingo();
+        }
+
+        async function toggleTile(index) {
+            if (index === 12 || !currentUser) return;
+            marked[index] = !marked[index];
+            renderBoard();
+            await saveToCloud();
+        }
+
+        async function saveToCloud() {
+            if (!currentUser) return;
+            try {
+                const userDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'bingo_state', 'current');
+                await setDoc(userDoc, { marked, updatedAt: Date.now() });
+            } catch (e) {
+                console.error("Error saving:", e);
+            }
+        }
+
+        function checkBingo() {
+            const lines = [
+                [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
+                [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
+                [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
+            ];
+            const hasBingo = lines.some(line => line.every(idx => marked[idx]));
+            alertElement.classList.toggle('hidden', !hasBingo);
+        }
+
+        window.confirmReset = async () => {
+            if (confirm("Reset your board? This cannot be undone.")) {
+                marked = new Array(25).fill(false);
+                marked[12] = true;
+                renderBoard();
+                await saveToCloud();
+            }
+        };
+
+        window.copyLink = () => {
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+        };
+
+        // Authentication & Sync
+        const init = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth failed:", e);
+                loader.style.display = 'none';
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                const userDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'bingo_state', 'current');
+                onSnapshot(userDoc, (docSnap) => {
+                    if (docSnap.exists()) {
+                        marked = docSnap.data().marked;
+                        renderBoard();
+                    } else {
+                        renderBoard();
+                    }
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 300);
+                }, (err) => {
+                    console.error("Snapshot error:", err);
+                    renderBoard();
+                    loader.style.display = 'none';
+                });
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
